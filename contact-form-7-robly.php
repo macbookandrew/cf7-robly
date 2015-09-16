@@ -118,5 +118,93 @@ function cf7_robly_options_page(  ) { ?>
     <?php
 }
 
-/* hook into CF7 submission */
+// TODO: get all Robly lists and CF7 forms and match them up
 
+/* hook into CF7 submission */
+add_action( 'wpcf7_before_send_mail', 'submit_to_robly', 10, 1 );
+function submit_to_robly( $form ) {
+    global $wpdb;
+
+    // get API keys
+    $options = get_option( 'cf7_robly_settings' );
+    $robly_API_id = $options['cf7_robly_api_id'];
+    $robly_API_key = $options['cf7_robly_api_key'];
+
+    // set notification email address
+    if ( $options['alternate_email'] ) {
+        $notification_email = $options['alternate_email'];
+    } else {
+        $notification_email = get_option( 'admin_email' );
+    }
+
+    // get posted data
+    $submission = WPCF7_Submission::get_instance();
+    if ( $submission ) {
+        $posted_data = $submission->get_posted_data();
+    }
+
+    // get array keys for form data
+    $email_field = filter_array_keys( 'email', $posted_data );
+    $first_name_field = filter_array_keys( 'first-name', $posted_data );
+    $last_name_field = filter_array_keys( 'last-name', $posted_data );
+    $name_field = filter_array_keys( 'name', $posted_data );
+
+    // get form data
+    $email = esc_attr( $posted_data[$email_field] );
+    if ( isset( $first_name_field) || isset( $last_name_field ) ) {
+        $first_name = esc_attr( $posted_data[$first_name_field] );
+        $last_name = esc_attr( $posted_data[$last_name_field] );
+    } else {
+        $first_name = esc_attr( $posted_data[$name_field] );
+    }
+
+    // set up data for the request
+    $post_url_first_run = 'https://api.robly.com/api/v1/sign_up/generate?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
+    $post_url_subsequent_runs = 'https://api.robly.com/api/v1/contacts/update_full_contact?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
+    $post_request_data = array(
+        'email'     => $email,
+        'fname'     => $first_name,
+        'lname'     => $last_name
+    );
+
+    // get sublist(s) and run cUrl for each since PHP won’t allow duplicate array keys and Robly requires sub_lists[] => each list ID
+    $first_run = true;
+    foreach ( explode( ',', esc_attr( $posted_data['robly-lists'] ) ) as $this_sublist ) {
+
+        // add this sublist to the request
+        $post_request_data['sub_lists'] = $this_sublist;
+
+        // send request via cUrl
+        $ch = curl_init();
+
+        if ( $first_run ) {
+            curl_setopt( $ch, CURLOPT_URL, $post_url_first_run );
+        } else {
+            curl_setopt( $ch, CURLOPT_URL, $post_url_subsequent_runs );
+        }
+        curl_setopt( $ch, CURLOPT_POST, 1 );
+        curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+
+        $post_result = curl_exec( $ch );
+        curl_close( $ch );
+
+        // check for cUrl errors and send email if needed
+        echo $post_result;
+        $post_result_array = json_decode( $post_result, true );
+
+        if ( $post_result_array['successful'] == 'false' ) {
+            mail( $email_notification, 'Contact to manually add to Robly', $post_request_data );
+        }
+
+        $first_run = false;
+    } // end sublist loop
+}
+
+function filter_array_keys( $needle, array $haystack ) {
+    foreach ( $haystack as $key => $value ) {
+        if ( stripos( $key, $needle ) !== false ) {
+            return $key;
+        }
+    }
+}

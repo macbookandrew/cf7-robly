@@ -18,3 +18,5 @@ A simple plugin to add email submissions to Robly using [their API](http://suppo
     - Email field must be either the `email` type or have the word “email” in the field name
     - First and last name fields must have the words “first-name” or “last-name” in the field name
     - A single name field must have “name” in the name field, and will be added to the first-name field in Robly
+    - In each contact form, add a “hidden field” named “robly-lists” with the IDs of the sub-list for the contact to be added to (separate multiple sub-lists with commas)
+        - Example: `[hidden robly-lists "11162,11159"]`
