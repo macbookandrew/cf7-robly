@@ -27,10 +27,11 @@ function cf7_robly_add_admin_menu() {
 function cf7_robly_settings_init() {
     register_setting( 'cf7_robly_options', 'cf7_robly_settings' );
 
+    // API settings
     add_settings_section(
         'cf7_robly_options_keys_section',
         __( 'Add your API Keys', 'cf7_robly' ),
-        'cf7_robly_settings_section_callback',
+        'cf7_robly_api_settings_section_callback',
         'cf7_robly_options'
     );
 
@@ -50,6 +51,23 @@ function cf7_robly_settings_init() {
         'cf7_robly_options_keys_section'
     );
 
+    // alternate email settings
+    add_settings_section(
+        'cf7_robly_options_alternate_email_section',
+        __( 'Alternate Email', 'cf7_robly' ),
+        'cf7_robly_alternate_email_settings_section_callback',
+        'cf7_robly_options'
+    );
+
+    add_settings_field(
+        'cf7_robly_alternate_email',
+        __( 'Alternate Email Address', 'cf7_robly' ),
+        'cf7_robly_alternate_email_render',
+        'cf7_robly_options',
+        'cf7_robly_options_alternate_email_section'
+    );
+
+
 }
 
 // print API ID field
@@ -60,15 +78,27 @@ function cf7_robly_api_id_render() {
 }
 
 // print API Key field
-function cf7_robly_api_key_render(  ) {
+function cf7_robly_api_key_render() {
     $options = get_option( 'cf7_robly_settings' ); ?>
     <input type="text" name="cf7_robly_settings[cf7_robly_api_key]" placeholder="f1a80ae1cb0c73d4f4d341" size="40" value="<?php echo $options['cf7_robly_api_key']; ?>">
     <?php
 }
 
-// print field description
-function cf7_robly_settings_section_callback(  ) {
+// print API Key field
+function cf7_robly_alternate_email_render() {
+    $options = get_option( 'cf7_robly_settings' ); ?>
+    <input type="email" name="cf7_robly_settings[cf7_robly_alternate_email]" placeholder="john.doe@example.com" value="<?php echo $options['cf7_robly_alternate_email']; ?>">
+    <?php
+}
+
+// print API settings description
+function cf7_robly_api_settings_section_callback(  ) {
     echo __( 'Enter your API Keys below. Don’t have any? <a href="mailto:support@robly.com?subject=API access">Request them here</a>.', 'cf7_robly' );
+}
+
+// print alteranet email settings description
+function cf7_robly_alternate_email_settings_section_callback(  ) {
+    echo __( 'By default, failed API results will be emailed to the site administrator. To send to a different email address, enter it below; separate multiple addresses with commas.', 'cf7_robly' );
 }
 
 // print form
@@ -87,4 +117,6 @@ function cf7_robly_options_page(  ) { ?>
     </div>
     <?php
 }
+
+/* hook into CF7 submission */
 
