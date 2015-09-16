@@ -167,38 +167,42 @@ function submit_to_robly( $form ) {
         'lname'     => $last_name
     );
 
+    // send request via cUrl
+    $ch = curl_init();
+
+    curl_setopt( $ch, CURLOPT_URL, $post_url_first_run );
+    curl_setopt( $ch, CURLOPT_POST, 1 );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+
+    $first_curl_response = curl_exec( $ch );
+
     // get sublist(s) and run cUrl for each since PHP won’t allow duplicate array keys and Robly requires sub_lists[] => each list ID
-    $first_run = true;
     foreach ( explode( ',', esc_attr( $posted_data['robly-lists'] ) ) as $this_sublist ) {
 
         // add this sublist to the request
         $post_request_data['sub_lists'] = $this_sublist;
 
-        // send request via cUrl
-        $ch = curl_init();
-
-        if ( $first_run ) {
-            curl_setopt( $ch, CURLOPT_URL, $post_url_first_run );
-        } else {
-            curl_setopt( $ch, CURLOPT_URL, $post_url_subsequent_runs );
-        }
+        curl_setopt( $ch, CURLOPT_URL, $post_url_subsequent_runs );
         curl_setopt( $ch, CURLOPT_POST, 1 );
         curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 
         $post_result = curl_exec( $ch );
-        curl_close( $ch );
 
         // check for cUrl errors and send email if needed
-        echo $post_result;
-        $post_result_array = json_decode( $post_result, true );
-
-        if ( $post_result_array['successful'] == 'false' ) {
-            mail( $email_notification, 'Contact to manually add to Robly', $post_request_data );
+        $post_result_array = json_decode( $post_result );
+        if ( $post_result_array->successful == 'false' ) {
+            $send_email = 'true';
+            $notification_content .= $post_result;
         }
-
-        $first_run = false;
     } // end sublist loop
+
+    // close cUrl connection
+    curl_close( $ch );
+
+    // send notification email if necessary
+    mail( $notification_email, 'Contact to manually add to Robly', $notification_content );
 }
 
 function filter_array_keys( $needle, array $haystack ) {
