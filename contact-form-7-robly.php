@@ -68,21 +68,22 @@ function cf7_robly_api_key_render(  ) {
 
 
 function cf7_robly_settings_section_callback(  ) {
-    echo __( 'Enter your API Keys below. Don’t have them? <a href="mailto:support@robly.com?subject=API access">Request them here</a>.', 'cf7_robly' );
+    echo __( 'Enter your API Keys below. Don’t have any? <a href="mailto:support@robly.com?subject=API access">Request them here</a>.', 'cf7_robly' );
 }
 
 
 function cf7_robly_options_page(  ) { ?>
-    <form action="options.php" method="post">
+    <div class="wrap">
+       <h2>Contact Form 7 to Robly</h2>
+        <form action="options.php" method="post">
 
-        <h2>Contact Form 7 to Robly</h2>
+            <?php
+            settings_fields( 'cf7_robly_options' );
+            do_settings_sections( 'cf7_robly_options' );
+            submit_button();
+            ?>
 
-        <?php
-        settings_fields( 'cf7_robly_options' );
-        do_settings_sections( 'cf7_robly_options' );
-        submit_button();
-        ?>
-
-    </form>
+        </form>
+    </div>
     <?php
 }
