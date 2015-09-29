@@ -3,7 +3,7 @@
 - Tags: button
 - Donate link: [https://cash.me/$AndrewRMinionDesign](https://cash.me/$AndrewRMinionDesign)
 - Tested up to: 4.3
-- Stable tag: 1.0.0
+- Stable tag: 1.0.1
 - License: GPL2
 
 A simple plugin to add email submissions to Robly using their API.

@@ -3,10 +3,11 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
+ * GitHub Plugin URI: https://github.com/macbookandrew/contact-form-7-robly
  */
 
 /* prevent this file from being accessed directly */
@@ -96,7 +97,7 @@ function cf7_robly_api_settings_section_callback(  ) {
     echo __( 'Enter your API Keys below. Don’t have any? <a href="mailto:support@robly.com?subject=API access">Request them here</a>.', 'cf7_robly' );
 }
 
-// print alteranet email settings description
+// print alternate email settings description
 function cf7_robly_alternate_email_settings_section_callback(  ) {
     echo __( 'By default, failed API results will be emailed to the site administrator. To send to a different email address, enter it below; separate multiple addresses with commas.', 'cf7_robly' );
 }
