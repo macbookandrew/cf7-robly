@@ -193,7 +193,7 @@ function submit_to_robly( $form ) {
 
         // check for cUrl errors and send email if needed
         $post_result_array = json_decode( $post_result );
-        if ( $post_result_array->successful == 'false' ) {
+        if ( $post_result_array->successful != 'true' ) {
             $send_email = 'true';
             $notification_content .= $post_result;
         }
@@ -203,7 +203,9 @@ function submit_to_robly( $form ) {
     curl_close( $ch );
 
     // send notification email if necessary
-    mail( $notification_email, 'Contact to manually add to Robly', $notification_content );
+    if ( $send_email ) {
+        mail( $notification_email, 'Contact to manually add to Robly', $notification_content . "\n\nSent by Contact Form 7 to Robly on " . home_url() );
+    }
 }
 
 function filter_array_keys( $needle, array $haystack ) {
