@@ -160,7 +160,7 @@ function submit_to_robly( $form ) {
     }
 
     // check for email address
-    if ( isset( $email ) && $email != NULL ) {
+    if ( isset( $email ) && $email != NULL && $email != '' ) {
         // set up data for the request
         $post_url_first_run = 'https://api.robly.com/api/v1/sign_up/generate?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
         $post_url_subsequent_runs = 'https://api.robly.com/api/v1/contacts/update_full_contact?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
