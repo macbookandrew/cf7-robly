@@ -3,7 +3,7 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
@@ -159,52 +159,55 @@ function submit_to_robly( $form ) {
         $first_name = esc_attr( $posted_data[$name_field] );
     }
 
-    // set up data for the request
-    $post_url_first_run = 'https://api.robly.com/api/v1/sign_up/generate?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
-    $post_url_subsequent_runs = 'https://api.robly.com/api/v1/contacts/update_full_contact?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
-    $post_request_data = array(
-        'email'     => $email,
-        'fname'     => $first_name,
-        'lname'     => $last_name
-    );
+    // check for email address
+    if ( isset( $email ) && $email != NULL ) {
+        // set up data for the request
+        $post_url_first_run = 'https://api.robly.com/api/v1/sign_up/generate?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
+        $post_url_subsequent_runs = 'https://api.robly.com/api/v1/contacts/update_full_contact?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
+        $post_request_data = array(
+            'email'     => $email,
+            'fname'     => $first_name,
+            'lname'     => $last_name
+        );
 
-    // send request via cUrl
-    $ch = curl_init();
+        // send request via cUrl
+        $ch = curl_init();
 
-    curl_setopt( $ch, CURLOPT_URL, $post_url_first_run );
-    curl_setopt( $ch, CURLOPT_POST, 1 );
-    curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
-    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-
-    $first_curl_response = curl_exec( $ch );
-
-    // get sublist(s) and run cUrl for each since PHP won’t allow duplicate array keys and Robly requires sub_lists[] => each list ID
-    foreach ( explode( ',', esc_attr( $posted_data['robly-lists'] ) ) as $this_sublist ) {
-
-        // add this sublist to the request
-        $post_request_data['sub_lists'] = $this_sublist;
-
-        curl_setopt( $ch, CURLOPT_URL, $post_url_subsequent_runs );
+        curl_setopt( $ch, CURLOPT_URL, $post_url_first_run );
         curl_setopt( $ch, CURLOPT_POST, 1 );
         curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 
-        $post_result = curl_exec( $ch );
+        $first_curl_response = curl_exec( $ch );
 
-        // check for cUrl errors and send email if needed
-        $post_result_array = json_decode( $post_result );
-        if ( $post_result_array->successful != 'true' ) {
-            $send_email = 'true';
-            $notification_content .= $post_result;
+        // get sublist(s) and run cUrl for each since PHP won’t allow duplicate array keys and Robly requires sub_lists[] => each list ID
+        foreach ( explode( ',', esc_attr( $posted_data['robly-lists'] ) ) as $this_sublist ) {
+
+            // add this sublist to the request
+            $post_request_data['sub_lists'] = $this_sublist;
+
+            curl_setopt( $ch, CURLOPT_URL, $post_url_subsequent_runs );
+            curl_setopt( $ch, CURLOPT_POST, 1 );
+            curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
+            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+
+            $post_result = curl_exec( $ch );
+
+            // check for cUrl errors and send email if needed
+            $post_result_array = json_decode( $post_result );
+            if ( $post_result_array->successful != 'true' ) {
+                $send_email = 'true';
+                $notification_content .= $post_result;
+            }
+        } // end sublist loop
+
+        // close cUrl connection
+        curl_close( $ch );
+
+        // send notification email if necessary
+        if ( $send_email ) {
+            mail( $notification_email, 'Contact to manually add to Robly', $notification_content . "\n\nSent by Contact Form 7 to Robly on " . home_url() );
         }
-    } // end sublist loop
-
-    // close cUrl connection
-    curl_close( $ch );
-
-    // send notification email if necessary
-    if ( $send_email ) {
-        mail( $notification_email, 'Contact to manually add to Robly', $notification_content . "\n\nSent by Contact Form 7 to Robly on " . home_url() );
     }
 }
 
