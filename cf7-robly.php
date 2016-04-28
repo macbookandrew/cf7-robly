@@ -67,8 +67,6 @@ function cf7_robly_settings_init() {
         'cf7_robly_options',
         'cf7_robly_options_alternate_email_section'
     );
-
-
 }
 
 // print API ID field
@@ -89,7 +87,7 @@ function cf7_robly_api_key_render() {
     }
 }
 
-// print API Key field
+// print alternate email field
 function cf7_robly_alternate_email_render() {
     $options = get_option( 'cf7_robly_settings' ); ?>
     <input type="email" name="cf7_robly_settings[cf7_robly_alternate_email]" placeholder="john.doe@example.com" value="<?php echo $options['cf7_robly_alternate_email']; ?>">
@@ -97,17 +95,17 @@ function cf7_robly_alternate_email_render() {
 }
 
 // print API settings description
-function cf7_robly_api_settings_section_callback(  ) {
+function cf7_robly_api_settings_section_callback() {
     echo __( 'Enter your API Keys below. Don’t have any? <a href="mailto:support@robly.com?subject=API access">Request them here</a>.', 'cf7_robly' );
 }
 
 // print alternate email settings description
-function cf7_robly_alternate_email_settings_section_callback(  ) {
+function cf7_robly_alternate_email_settings_section_callback() {
     echo __( 'By default, failed API results will be emailed to the site administrator. To send to a different email address, enter it below; separate multiple addresses with commas.', 'cf7_robly' );
 }
 
 // print form
-function cf7_robly_options_page(  ) { ?>
+function cf7_robly_options_page() { ?>
     <div class="wrap">
        <h2>Contact Form 7 to Robly</h2>
         <form action="options.php" method="post">
