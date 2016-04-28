@@ -83,6 +83,10 @@ function cf7_robly_api_key_render() {
     $options = get_option( 'cf7_robly_settings' ); ?>
     <input type="text" name="cf7_robly_settings[cf7_robly_api_key]" placeholder="f1a80ae1cb0c73d4f4d341" size="40" value="<?php echo $options['cf7_robly_api_key']; ?>">
     <?php
+    // cache lists if valid keys
+    if ( $options['cf7_robly_api_id'] && $options['cf7_robly_api_key'] ) {
+        cache_robly_lists( $options['cf7_robly_api_id'], $options['cf7_robly_api_key'] );
+    }
 }
 
 // print API Key field
@@ -120,6 +124,30 @@ function cf7_robly_options_page(  ) { ?>
 }
 
 // TODO: get all Robly lists and CF7 forms and match them up
+// cache Robly lists
+function cache_robly_lists( $robly_API_id = NULL, $robly_API_key = NULL ) {
+    if ( $robly_API_id && $robly_API_key ) {
+        // get all sublists from API
+        $sublists_ch = curl_init();
+        curl_setopt( $sublists_ch, CURLOPT_URL, 'https://api.robly.com/api/v1/sub_lists/show?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key . '&include_all=true' );
+        curl_setopt( $sublists_ch, CURLOPT_RETURNTRANSFER, true );
+        $sublists_ch_response = curl_exec( $sublists_ch );
+        curl_close( $sublists_ch );
+
+        // decode JSON return
+        $all_sublists = json_decode( $sublists_ch_response );
+
+        // save to options
+        if ( $all_sublists ) {
+            $sublists = array();
+            foreach ( $all_sublists as $list ) {
+                $sublists[$list->sub_list->id] = $list->sub_list->name;
+            }
+            update_option( 'robly_sublists', maybe_serialize( $sublists ) );
+        }
+    }
+}
+
 
 /* hook into CF7 submission */
 add_action( 'wpcf7_before_send_mail', 'submit_to_robly', 10, 1 );
