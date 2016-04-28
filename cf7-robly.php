@@ -156,6 +156,8 @@ function submit_to_robly( $form ) {
     $options = get_option( 'cf7_robly_settings' );
     $robly_API_id = $options['cf7_robly_api_id'];
     $robly_API_key = $options['cf7_robly_api_key'];
+    $API_base = 'https://api.robly.com/api/v1/';
+    $API_credentials = '?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
 
     // set notification email address
     if ( $options['alternate_email'] ) {
@@ -187,52 +189,78 @@ function submit_to_robly( $form ) {
 
     // check for email address
     if ( isset( $email ) && $email != NULL && $email != '' ) {
-        // set up data for the request
-        $post_url_first_run = 'https://api.robly.com/api/v1/sign_up/generate?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
-        $post_url_subsequent_runs = 'https://api.robly.com/api/v1/contacts/update_full_contact?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
-        $post_request_data = array(
-            'email'     => $email,
-            'fname'     => $first_name,
-            'lname'     => $last_name
-        );
-
-        // send request via cUrl
+        // search Robly for customer by email
         $ch = curl_init();
+        curl_setopt( $ch, CURLOPT_URL, $API_base . 'contacts/search' . $API_credentials . '&email=' . $email );
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+        $curl_search = curl_exec( $ch );
+        $curl_search_response = json_decode( $curl_search );
 
-        curl_setopt( $ch, CURLOPT_URL, $post_url_first_run );
+        // set API method for subsequent call
+        if ( isset( $curl_search_response->member ) ) {
+            // handle deleted/unsubscribed members
+            if ( $curl_search_response->member->is_subscribed == false || $curl_search_response->member->is_deleted == true ) {
+                curl_setopt( $ch, CURLOPT_URL, $API_base . 'contacts/resubscribe' . $API_credentials . '&email=' . $email );
+                curl_setopt( $ch, CURLOPT_POST, 1 );
+                curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+
+                // run the request and check to see if manual email is needed
+                $resubscribe_curl_response = curl_exec( $ch );
+                $json_response = json_decode( $resubscribe_curl_response );
+                if ( $json_response->successful != true ) {
+                    $send_email = true;
+                    $error_message .= 'Resubscribe: ' . json_decode( $resubscribe_curl_response )->message;
+                } else {
+                    $send_email = false;
+                }
+            }
+            // continue with updating contact info
+            $API_method = 'contacts/update_full_contact';
+        // handle new members
+        } else {
+            $API_method = 'sign_up/generate';
+        }
+
+        // set up user data for the request
+        $post_url = $API_method . $API_credentials;
+        $user_parameters = array(
+            'email'         => urlencode( $email ),
+            'fname'         => urlencode( $first_name ),
+            'lname'         => urlencode( $last_name )
+        );
+        $user_parameters = http_build_query( $user_parameters );
+
+        // add sublist IDs
+        $post_data = NULL;
+        if ( $robly_sublists ) {
+            foreach ( $robly_sublists as $this_list ) {
+                $post_data .= 'sub_lists[]=' . $this_list . '&';
+            }
+        }
+        $post_data = rtrim( $post_data, '&' );
+var_dump($API_base . $API_method . $API_credentials . '&' . $user_parameters);
+        // set up the rest of the request
+        curl_setopt( $ch, CURLOPT_URL, $API_base . $API_method . $API_credentials . '&' . $user_parameters );
         curl_setopt( $ch, CURLOPT_POST, 1 );
-        curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
+        curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_data );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 
-        $first_curl_response = curl_exec( $ch );
-
-        // get sublist(s) and run cUrl for each since PHP won’t allow duplicate array keys and Robly requires sub_lists[] => each list ID
-        foreach ( explode( ',', esc_attr( $posted_data['robly-lists'] ) ) as $this_sublist ) {
-
-            // add this sublist to the request
-            $post_request_data['sub_lists'] = $this_sublist;
-
-            curl_setopt( $ch, CURLOPT_URL, $post_url_subsequent_runs );
-            curl_setopt( $ch, CURLOPT_POST, 1 );
-            curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_request_data );
-            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-
-            $post_result = curl_exec( $ch );
-
-            // check for cUrl errors and send email if needed
-            $post_result_array = json_decode( $post_result );
-            if ( $post_result_array->successful != 'true' ) {
-                $send_email = 'true';
-                $notification_content .= $post_result;
-            }
-        } // end sublist loop
+        // run the request and check to see if manual email is needed
+        $user_curl_response = curl_exec( $ch );
+        $json_response = json_decode( $user_curl_response );
+        if ( $json_response->successful != true || ( $json_response->successful == true && strpos( $json_response->message, 'already exists' ) !== false ) ) {
+            $send_email = true;
+            $error_message .= 'Update Contact: ' . json_decode( $user_curl_response )->message;
+        } else {
+            $send_email = false;
+        }
 
         // close cUrl connection
         curl_close( $ch );
 
         // send notification email if necessary
         if ( $send_email ) {
-            mail( $notification_email, 'Contact to manually add to Robly', $notification_content . "\n\nSent by Contact Form 7 to Robly on " . home_url() );
+            $email_sent = mail( $notification_email, 'Contact to manually add to Robly', "API failure\n\nAPI call:\n" . $API_base . $API_method . '?api_id=XXX&api_key=XXX&' . $user_parameters . "\nLists: " . $post_data . "\n\nDetails:\n" . $error_message . "\n\nSent by the Contact Form 7 to Robly plugin on " . home_url() );
         }
     }
 }
