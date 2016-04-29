@@ -163,7 +163,7 @@ function cache_robly_fields( $robly_API_id = NULL, $robly_API_key = NULL ) {
         if ( $all_fields ) {
             $fields = array();
             foreach ( $all_fields as $field ) {
-                $fields[$field->field_tag->id] = $field->field_tag->label;
+                $fields[$field->field_tag->user_tag] = $field->field_tag->label;
             }
             update_option( 'robly_fields', maybe_serialize( $fields ) );
         }
