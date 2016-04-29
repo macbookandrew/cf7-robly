@@ -3,11 +3,12 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API
- * Version: 1.1
+ * Version: 1.1.1
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
  * GitHub Plugin URI: https://github.com/macbookandrew/cf7-robly
+ */
 
 /* prevent this file from being accessed directly */
 if ( ! defined( 'ABSPATH' ) ) {
@@ -201,13 +202,15 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
 
     // get all Robly sublists
     $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
-    $all_submissions = $settings['_cf7_robly_all-submissions'];
+    $all_submissions = $settings['all-submissions'];
     $sublists_options = NULL;
 
     // generate list of sublist options
     foreach ( $robly_sublists as $id => $list ) {
         $sublists_options .= '<option value="' . $id . '"';
-        $sublists_options .= in_array( $id, $settings['all-submissions'] ) ? ' selected="selected"' : '';
+        if ( $all_submissions ) {
+            $sublists_options .= in_array( $id, $settings['all-submissions'] ) ? ' selected="selected"' : '';
+        }
         $sublists_options .= '>' . $list . '</option>';
     }
 
@@ -248,12 +251,15 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     );
 
     // add all CF7 fields to Robly settings fields
+    $field_types_to_ignore = array( 'recaptcha', 'clear', 'submit' );
     foreach ( $form_fields as $this_field ) {
-        if ( 'submit' != $this_field['type'] ) {
+        if ( ! in_array( $this_field['type'], $field_types_to_ignore ) ) {
             $fields_options = NULL;
             foreach ( $robly_fields as $id => $label ) {
                 $fields_options .= '<option value="' . $id . '"';
-                $fields_options .= in_array( $id, $settings['fields'][$this_field['name']] ) ? ' selected="selected"' : '';
+                if ( $settings['fields'] && $settings['fields'][$this_field['name']] ) {
+                    $fields_options .= in_array( $id, $settings['fields'][$this_field['name']] ) ? ' selected="selected"' : '';
+                }
                 $fields_options .= '>' . $label . '</option>';
             }
 
