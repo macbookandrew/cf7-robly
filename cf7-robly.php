@@ -487,3 +487,6 @@ function submit_to_robly( $form ) {
         }
     }
 }
+
+#TODO: add JS to detect when form content changes and add message to Robly tab requiring to save field first
+#TODO: add support for custom fields (custom HTML fields)
