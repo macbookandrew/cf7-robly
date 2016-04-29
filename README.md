@@ -4,7 +4,7 @@
 **Tags:** contact form 7, contact form, cf7, form, forms, submission, submissions, robly, email, automation, customer, marketing  
 **Requires at least:** 4.3  
 **Tested up to:** 4.5.1  
-**Stable tag:** 1.1  
+**Stable tag:** 1.1.1  
 **License:** GPLv2 or later  
 **License URI:** http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -52,6 +52,10 @@ API stands for “Application Programming Interface,” which basically means co
 
 
 ## Changelog ##
+
+### 1.1.1 ###
+ * Fix some array bugs
+ * Ignore more field types that don’t make sense for Robly data fields
 
 ### 1.1 ###
  * Major upgrade

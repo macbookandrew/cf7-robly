@@ -3,7 +3,7 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API
- * Version: 1.1
+ * Version: 1.1.1
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
