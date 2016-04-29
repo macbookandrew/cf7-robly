@@ -15,6 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/* register scripts */
+add_action( 'admin_enqueue_scripts', 'cf7_robly_scripts' );
+function cf7_robly_scripts() {
+    wp_register_script( 'cf7-robly-backend', plugins_url( 'js/backend.min.js', __FILE__ ), array( 'jquery' ) );
+}
+
 /* add settings page */
 add_action( 'admin_menu', 'cf7_robly_add_admin_menu' );
 add_action( 'admin_init', 'cf7_robly_settings_init' );
@@ -188,6 +194,8 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     $post_id = $cf7->id();
     $settings = cf7_robly_get_form_settings( $post_id );
 
+    wp_enqueue_script( 'cf7-robly-backend' );
+
     // get all Robly sublists
     $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
     $all_submissions = $settings['_cf7_robly_all-submissions'];
@@ -210,17 +218,29 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
 
     // start setting up Robly settings fields
     $fields = array(
-        'cf7-robly-settings' => array(
+        'ignore-field' => array(
+            'label'     => 'Ignore this Contact Form',
+            'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
+            'field'     => sprintf(
+                '<input id="ignore-form" name="cf7-robly[ignore-form]" value="1" %s type="checkbox" />
+                <p class="desc"><label for="ignore-form">%s</ignore></p>',
+                checked( $settings[ 'ignore-form' ], true, false ),
+                'Don&rsquo;t send anything from this form to Robly'
+            ),
+        ),
+        'all-submissions' => array(
             'label'     => 'All Submissions',
             'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
             'field'     => sprintf(
                 '<label>
-                    <select name="cf7-robly[all-submissions][]" multiple>' . $sublists_options . '
+                    <select name="cf7-robly[all-submissions][]" multiple %1$s>
+                    ' . $sublists_options .  '
                     </select>
                 </label>
-                <p class="desc">%s</p>',
+                <p class="desc">%2$s</p>',
+                $settings['ignore-form'] ? 'disabled' : '',
                 'Add all submissions to these lists'
-            )
+            ),
         ),
     );
 
@@ -239,13 +259,14 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
                 'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
                 'field'     => sprintf(
                     '<label>
-                        <select name="cf7-robly[fields][%1$s][]" multiple>
+                        <select name="cf7-robly[fields][%1$s][]" multiple %3$s>
                             %2$s
                         </select>
                     </label>
                     <p class="desc">Add contents of the <code>%1$s</code> field to these Robly field(s)</p>',
                     $this_field['name'],
-                    $fields_options
+                    $fields_options,
+                    $settings['ignore-form'] ? 'disabled' : ''
                 )
             );
         }
@@ -382,7 +403,7 @@ function submit_to_robly( $form ) {
     }
 
     // check for email address
-    if ( isset( $field_matches['email'] ) && $posted_data[$email_field] != NULL && $posted_data[$email_field] != '' ) {
+    if ( ! $settings['ignore-form'] && isset( $field_matches['email'] ) && $posted_data[$email_field] != NULL && $posted_data[$email_field] != '' ) {
         // search Robly for customer by email
         $ch = curl_init();
         curl_setopt( $ch, CURLOPT_URL, $API_base . 'contacts/search' . $API_credentials . '&email=' . $posted_data[$email_field] );
