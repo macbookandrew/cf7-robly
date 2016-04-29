@@ -81,9 +81,10 @@ function cf7_robly_api_key_render() {
     $options = get_option( 'cf7_robly_settings' ); ?>
     <input type="text" name="cf7_robly_settings[cf7_robly_api_key]" placeholder="f1a80ae1cb0c73d4f4d341" size="40" value="<?php echo $options['cf7_robly_api_key']; ?>">
     <?php
-    // cache lists if valid keys
+    // cache lists and fields if valid keys
     if ( $options['cf7_robly_api_id'] && $options['cf7_robly_api_key'] ) {
         cache_robly_lists( $options['cf7_robly_api_id'], $options['cf7_robly_api_key'] );
+        cache_robly_fields( $options['cf7_robly_api_id'], $options['cf7_robly_api_key'] );
     }
 }
 
@@ -142,6 +143,30 @@ function cache_robly_lists( $robly_API_id = NULL, $robly_API_key = NULL ) {
                 $sublists[$list->sub_list->id] = $list->sub_list->name;
             }
             update_option( 'robly_sublists', maybe_serialize( $sublists ) );
+        }
+    }
+}
+
+// cache Robly fields
+function cache_robly_fields( $robly_API_id = NULL, $robly_API_key = NULL ) {
+    if ( $robly_API_id && $robly_API_key ) {
+        // get all fields from API
+        $fields_ch = curl_init();
+        curl_setopt( $fields_ch, CURLOPT_URL, 'https://api.robly.com/api/v1/fields/show?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key . '&include_all=true' );
+        curl_setopt( $fields_ch, CURLOPT_RETURNTRANSFER, true );
+        $fields_ch_response = curl_exec( $fields_ch );
+        curl_close( $fields_ch );
+
+        // decode JSON return
+        $all_fields = json_decode( $fields_ch_response );
+
+        // save to options
+        if ( $all_fields ) {
+            $fields = array();
+            foreach ( $all_fields as $field ) {
+                $fields[$field->field_tag->id] = $field->field_tag->label;
+            }
+            update_option( 'robly_fields', maybe_serialize( $fields ) );
         }
     }
 }
