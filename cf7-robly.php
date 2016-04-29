@@ -122,7 +122,6 @@ function cf7_robly_options_page() { ?>
     <?php
 }
 
-// TODO: get all Robly lists and CF7 forms and match them up
 // cache Robly lists
 function cache_robly_lists( $robly_API_id = NULL, $robly_API_key = NULL ) {
     if ( $robly_API_id && $robly_API_key ) {
@@ -171,8 +170,176 @@ function cache_robly_fields( $robly_API_id = NULL, $robly_API_key = NULL ) {
     }
 }
 
+// add WPCF7 metabox
+add_action( 'wpcf7_add_meta_boxes', 'cf7_robly_wpcf7_add_meta_boxes' );
+function cf7_robly_wpcf7_add_meta_boxes() {
+    add_meta_box(
+        'cf7s-subject',
+        'Robly Settings',
+        'cf7_robly_wpcf7_metabox',
+        NULL,
+        'form',
+        'low'
+    );
+}
 
-/* hook into CF7 submission */
+// print WPCF7 metabox
+function cf7_robly_wpcf7_metabox( $cf7 ) {
+    $post_id = $cf7->id();
+    $settings = cf7_robly_get_form_settings( $cf7 );
+
+    // get all Robly sublists
+    $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
+    $all_submissions = $settings['_cf7_robly_all-submissions'];
+    $sublists_options = NULL;
+
+    // generate list of sublist options
+    foreach ( $robly_sublists as $id => $list ) {
+        $sublists_options .= '<option value="' . $id . '"';
+        $sublists_options .= in_array( $id, $settings['all-submissions'] ) ? ' selected="selected"' : '';
+        $sublists_options .= '>' . $list . '</option>';
+    }
+
+    // get all Robly fields
+    $robly_fields = maybe_unserialize( get_option( 'robly_fields' ) );
+    $fields_options = NULL;
+
+    // get all WPCF7 fields
+    $wpcf7_shortcodes = WPCF7_ShortcodeManager::get_instance();
+    $form_fields = $wpcf7_shortcodes->get_scanned_tags();
+
+    // start setting up Robly settings fields
+    $fields = array(
+        'cf7-robly-settings' => array(
+            'label'     => 'All Submissions',
+            'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
+            'field'     => sprintf(
+                '<label>
+                    <select name="cf7-robly[all-submissions][]" multiple>' . $sublists_options . '
+                    </select>
+                </label>
+                <p class="desc">%s</p>',
+                'Add all submissions to these lists'
+            )
+        ),
+    );
+
+    // add all CF7 fields to Robly settings fields
+    foreach ( $form_fields as $this_field ) {
+        if ( 'submit' != $this_field['type'] ) {
+            $fields_options = NULL;
+            foreach ( $robly_fields as $id => $label ) {
+                $fields_options .= '<option value="' . $id . '"';
+                $fields_options .= in_array( $id, $settings['fields'][$this_field['name']] ) ? ' selected="selected"' : '';
+                $fields_options .= '>' . $label . '</option>';
+            }
+
+            $fields[$this_field['name']] = array(
+                'label'     => '<code>' . esc_html( $this_field['name'] ) . '</code> Field',
+                'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
+                'field'     => sprintf(
+                    '<label>
+                        <select name="cf7-robly[fields][%1$s][]" multiple>
+                            %2$s
+                        </select>
+                    </label>
+                    <p class="desc">Add contents of the <code>%1$s</code> field to these Robly field(s)</p>',
+                    $this_field['name'],
+                    $fields_options
+                )
+            );
+        }
+    }
+
+    $rows = array();
+
+    foreach ( $fields as $field_id => $field )
+        $rows[] = sprintf(
+            '<tr class="cf7-robly-field-%1$s">
+                <th>
+                    <label for="%1$s">%2$s</label><br/>
+                </th>
+                <td>%3$s</td>
+            </tr>',
+            esc_attr( $field_id ),
+            $field['label'],
+            $field['field']
+        );
+
+    printf(
+        '<table class="form-table cf7-robly-table">
+            %s
+        </table>',
+        implode( '', $rows )
+    );
+
+}
+
+// register WPCF7 Robly Settings panel
+add_filter( 'wpcf7_editor_panels', 'cf7_robly_register_wpcf7_panel' );
+function cf7_robly_register_wpcf7_panel( $panels ) {
+    $form = WPCF7_ContactForm::get_current();
+    $post_id = $form->id();
+
+    $panels['cf7-robly-panel'] = array(
+        'title' => 'Robly Settings',
+        'callback' => 'cf7_robly_wpcf7_metabox',
+    );
+
+    return $panels;
+}
+
+// save WPCF7 Robly settings
+add_action( 'wpcf7_save_contact_form', 'cf7_robly_wpcf7_save_contact_form' );
+function cf7_robly_wpcf7_save_contact_form( $cf7 ) {
+    if ( ! isset( $_POST ) || empty( $_POST ) || ! isset( $_POST['cf7-robly'] ) || ! is_array( $_POST['cf7-robly'] ) ) {
+        return;
+    }
+
+    $post_id = $cf7->id();
+
+    if ( ! $post_id ) {
+        return;
+    }
+
+    if ( $_POST['cf7-robly'] ) {
+        update_post_meta( $post_id, '_cf7_robly', $_POST['cf7-robly'] );
+    }
+}
+
+// retrieve WPCF7 Robly settings
+function cf7_robly_get_form_settings( $form, $field = null, $fresh = false ) {
+    $form_settings = array();
+
+    if ( isset( $form_settings[ $form->id() ] ) && ! $fresh ) {
+        $settings = $form_settings[ $form->id() ];
+    } else {
+        $settings = get_post_meta( $form->id(), '_cf7_robly', true );
+    }
+
+    $settings = wp_parse_args(
+        $settings,
+        array(
+            '_cf7_robly' => NULL,
+        )
+    );
+
+    // Cache it for re-use
+    $form_settings[ $form->id() ] = $settings;
+
+    // Return a specific field value
+    if ( isset( $field ) ) {
+        if ( isset( $settings[ $field ] ) ) {
+            return $settings[ $field ];
+        } else {
+            return null;
+        }
+    }
+
+    return $settings;
+}
+
+/* hook into WPCF7 submission */
 add_action( 'wpcf7_before_send_mail', 'submit_to_robly', 10, 1 );
 function submit_to_robly( $form ) {
     global $wpdb;
