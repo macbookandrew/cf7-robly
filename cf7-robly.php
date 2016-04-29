@@ -363,6 +363,12 @@ function submit_to_robly( $form ) {
     if ( $submission ) {
         $posted_data = $submission->get_posted_data();
     }
+    $settings = cf7_robly_get_form_settings( $posted_data['_wpcf7'], NULL, true );
+
+    // get Robly lists
+    $hidden_fields_sublists = explode( ',', esc_attr( $posted_data['robly-lists'] ) );
+    $cf7_form_settings_sublists = $settings['all-submissions'];
+    $robly_sublists = array_unique( array_merge( $hidden_fields_sublists, $cf7_form_settings_sublists ) );
 
     // get array keys for form data
     $email_field = filter_array_keys( 'email', $posted_data );
