@@ -45,10 +45,10 @@ API stands for “Application Programming Interface,” which basically means co
 ## Screenshots ##
 
 ### 1. Settings screen ###
-![Settings screen](http://s.wordpress.org/extend/plugins/contact-form-7-to-robly/screenshot-1.png)
+![Settings screen](http://ps.w.org/cf7-robly/assets/screenshot-1.png)
 
 ### 2. Per-form settings ###
-![Per-form settings](http://s.wordpress.org/extend/plugins/contact-form-7-to-robly/screenshot-2.png)
+![Per-form settings](http://ps.w.org/cf7-robly/assets/screenshot-2.png)
 
 
 ## Changelog ##
