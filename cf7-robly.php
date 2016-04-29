@@ -371,25 +371,21 @@ function submit_to_robly( $form ) {
     $robly_sublists = array_unique( array_merge( $hidden_fields_sublists, $cf7_form_settings_sublists ) );
 
     // get array keys for form data
-    $email_field = filter_array_keys( 'email', $posted_data );
-    $first_name_field = filter_array_keys( 'first-name', $posted_data );
-    $last_name_field = filter_array_keys( 'last-name', $posted_data );
-    $name_field = filter_array_keys( 'name', $posted_data );
-
-    // get form data
-    $email = esc_attr( $posted_data[$email_field] );
-    if ( isset( $first_name_field) || isset( $last_name_field ) ) {
-        $first_name = esc_attr( $posted_data[$first_name_field] );
-        $last_name = esc_attr( $posted_data[$last_name_field] );
-    } else {
-        $first_name = esc_attr( $posted_data[$name_field] );
+    if ( $settings['fields'] ) {
+        $field_matches = array();
+        foreach( $settings['fields'] as $id => $field ) {
+            foreach ( $field as $this_field ) {
+                $field_matches[$this_field] = urlencode( $id );
+            }
+        }
+        $email_field = $field_matches['email'];
     }
 
     // check for email address
-    if ( isset( $email ) && $email != NULL && $email != '' ) {
+    if ( isset( $field_matches['email'] ) && $posted_data[$email_field] != NULL && $posted_data[$email_field] != '' ) {
         // search Robly for customer by email
         $ch = curl_init();
-        curl_setopt( $ch, CURLOPT_URL, $API_base . 'contacts/search' . $API_credentials . '&email=' . $email );
+        curl_setopt( $ch, CURLOPT_URL, $API_base . 'contacts/search' . $API_credentials . '&email=' . $posted_data[$email_field] );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
         $curl_search = curl_exec( $ch );
         $curl_search_response = json_decode( $curl_search );
@@ -418,14 +414,13 @@ function submit_to_robly( $form ) {
         } else {
             $API_method = 'sign_up/generate';
         }
+        $post_url = $API_method . $API_credentials;
 
         // set up user data for the request
-        $post_url = $API_method . $API_credentials;
-        $user_parameters = array(
-            'email'         => urlencode( $email ),
-            'fname'         => urlencode( $first_name ),
-            'lname'         => urlencode( $last_name )
-        );
+        $user_parameters = array();
+        foreach( $field_matches as $key => $label ) {
+            $user_parameters[$key] = $posted_data[$label];
+        }
         $user_parameters = http_build_query( $user_parameters );
 
         // add sublist IDs
@@ -436,7 +431,7 @@ function submit_to_robly( $form ) {
             }
         }
         $post_data = rtrim( $post_data, '&' );
-var_dump($API_base . $API_method . $API_credentials . '&' . $user_parameters);
+
         // set up the rest of the request
         curl_setopt( $ch, CURLOPT_URL, $API_base . $API_method . $API_credentials . '&' . $user_parameters );
         curl_setopt( $ch, CURLOPT_POST, 1 );
