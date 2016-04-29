@@ -233,7 +233,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
             ),
         ),
         'all-submissions' => array(
-            'label'     => 'All Submissions',
+            'label'     => 'Robly Lists',
             'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
             'field'     => sprintf(
                 '<label>
