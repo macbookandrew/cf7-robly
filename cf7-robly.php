@@ -186,7 +186,7 @@ function cf7_robly_wpcf7_add_meta_boxes() {
 // print WPCF7 metabox
 function cf7_robly_wpcf7_metabox( $cf7 ) {
     $post_id = $cf7->id();
-    $settings = cf7_robly_get_form_settings( $cf7 );
+    $settings = cf7_robly_get_form_settings( $post_id );
 
     // get all Robly sublists
     $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
@@ -308,13 +308,13 @@ function cf7_robly_wpcf7_save_contact_form( $cf7 ) {
 }
 
 // retrieve WPCF7 Robly settings
-function cf7_robly_get_form_settings( $form, $field = null, $fresh = false ) {
+function cf7_robly_get_form_settings( $form_id, $field = null, $fresh = false ) {
     $form_settings = array();
 
-    if ( isset( $form_settings[ $form->id() ] ) && ! $fresh ) {
-        $settings = $form_settings[ $form->id() ];
+    if ( isset( $form_settings[ $form_id ] ) && ! $fresh ) {
+        $settings = $form_settings[ $form_id ];
     } else {
-        $settings = get_post_meta( $form->id(), '_cf7_robly', true );
+        $settings = get_post_meta( $form_id, '_cf7_robly', true );
     }
 
     $settings = wp_parse_args(
@@ -325,7 +325,7 @@ function cf7_robly_get_form_settings( $form, $field = null, $fresh = false ) {
     );
 
     // Cache it for re-use
-    $form_settings[ $form->id() ] = $settings;
+    $form_settings[ $form_id ] = $settings;
 
     // Return a specific field value
     if ( isset( $field ) ) {
