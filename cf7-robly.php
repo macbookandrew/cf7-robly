@@ -457,11 +457,3 @@ function submit_to_robly( $form ) {
         }
     }
 }
-
-function filter_array_keys( $needle, array $haystack ) {
-    foreach ( $haystack as $key => $value ) {
-        if ( stripos( $key, $needle ) !== false ) {
-            return $key;
-        }
-    }
-}
