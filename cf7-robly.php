@@ -3,12 +3,11 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API
- * Version: 1.0.3
+ * Version: 1.1
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
- * GitHub Plugin URI: https://github.com/macbookandrew/contact-form-7-robly
- */
+ * GitHub Plugin URI: https://github.com/macbookandrew/cf7-robly
 
 /* prevent this file from being accessed directly */
 if ( ! defined( 'ABSPATH' ) ) {
