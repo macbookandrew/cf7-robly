@@ -251,8 +251,9 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     );
 
     // add all CF7 fields to Robly settings fields
+    $field_types_to_ignore = array( 'recaptcha', 'clear', 'submit' );
     foreach ( $form_fields as $this_field ) {
-        if ( 'submit' != $this_field['type'] ) {
+        if ( ! in_array( $this_field['type'], $field_types_to_ignore ) ) {
             $fields_options = NULL;
             foreach ( $robly_fields as $id => $label ) {
                 $fields_options .= '<option value="' . $id . '"';
