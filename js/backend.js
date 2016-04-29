@@ -13,5 +13,8 @@
         $('form#wpcf7-admin-form-element').on('submit', function(){
             $('select[name*="cf7-robly"]').attr('disabled', false);
         });
+
+        // add chosen.js
+        $('select[name*="cf7-robly"]').chosen();
     });
 })(jQuery);

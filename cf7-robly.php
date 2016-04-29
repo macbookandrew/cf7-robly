@@ -18,7 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* register scripts */
 add_action( 'admin_enqueue_scripts', 'cf7_robly_scripts' );
 function cf7_robly_scripts() {
-    wp_register_script( 'cf7-robly-backend', plugins_url( 'js/backend.min.js', __FILE__ ), array( 'jquery' ) );
+    wp_register_script( 'chosen', plugins_url( 'js/chosen.jquery.min.js', __FILE__ ), array( 'jquery' ) );
+    wp_register_style( 'chosen', plugins_url( 'css/chosen.min.css', __FILE__ ) );
+    wp_register_script( 'cf7-robly-backend', plugins_url( 'js/backend.min.js', __FILE__ ), array( 'jquery', 'chosen' ) );
 }
 
 /* add settings page */
@@ -195,6 +197,8 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     $settings = cf7_robly_get_form_settings( $post_id );
 
     wp_enqueue_script( 'cf7-robly-backend' );
+    wp_enqueue_script( 'chosen' );
+    wp_enqueue_style( 'chosen' );
 
     // get all Robly sublists
     $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
