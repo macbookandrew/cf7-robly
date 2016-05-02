@@ -306,7 +306,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
             </label>
             <p class="desc">Add contents of the <code><span class="name">%1$s</span></code> field to these Robly field(s)</p>',
             'custom-field-template-name',
-            $fields_options
+            str_replace( 'selected="selected"', '', $fields_options )
         )
     );
 
