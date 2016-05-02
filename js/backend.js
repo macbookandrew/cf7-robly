@@ -15,7 +15,7 @@
         });
 
         // add chosen.js
-        $('select[name*="cf7-robly"]').chosen();
+        $('select[name*="cf7-robly"]').chosen({width: '100%'});
 
         // add message to Robly tab if main content is changed
         $('#wpcf7-form').on('change', function(){

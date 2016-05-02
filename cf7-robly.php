@@ -490,5 +490,4 @@ function submit_to_robly( $form ) {
 }
 
 #TODO: add support for custom fields (custom HTML fields)
-#TODO: fix blank select fields if form hasn’t yet been saved
 #TODO: make Chosen fields disabled as well
