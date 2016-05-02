@@ -3,7 +3,7 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API
- * Version: 1.1.1
+ * Version: 1.2
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
@@ -296,7 +296,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
 
     // add a hidden row to use for cloning
     $fields['custom-field-template'] = array(
-        'label'     => '<input type="text" placeholder="Custom Field" name="custom-field-name" /> Field',
+        'label'     => '<input type="text" placeholder="Custom Field Name" name="custom-field-name" /> Field',
         'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
         'field'     => sprintf(
             '<label>
