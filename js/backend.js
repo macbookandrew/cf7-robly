@@ -32,8 +32,8 @@
 
         // set name of new custom fields
         $('.cf7-robly-table').on('blur', '.cf7-robly-field-custom.new input[name="custom-field-name"]', function() {
-            var $parent = $(this).parents('.cf7-robly-field-custom'),
-                customFieldName = $(this).val()
+            var $parent = $(this).parents('.cf7-robly-field-custom.new'),
+                customFieldName = $(this).val().length > -1 ? $(this).val() : 'custom-field-name';
 
             $parent.find('select').attr('name', 'cf7-robly[fields][' + customFieldName + '][]').trigger('chosen:updated');
             $parent.find('code span.name').html(customFieldName);
