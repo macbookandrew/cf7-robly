@@ -4,7 +4,7 @@ Donate link: https://cash.me/$AndrewRMinionDesign
 Tags: contact form 7, contact form, cf7, form, forms, submission, submissions, robly, email, automation, customer, marketing
 Requires at least: 4.3
 Tested up to: 4.5.1
-Stable tag: 1.1.1
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,12 +42,22 @@ API stands for “Application Programming Interface,” which basically means co
 1. When you install the plugin and enter your API ID and key, your WordPress site will contact the Robly API, asking for all the lists you have set up in your account. You are then able to choose certain lists to which all customers will be added, or choose certain lists to which purchasers of individual products are added, and those choices are saved in your WordPress options.
 1. When somebody submits a contact form, WordPress will contact the Robly API and search for that customer in your Robly account by their email address. If found, it will update their information according to the settings you specified; otherwise, it will create a new contact with the customer’s information and add them to the list(s) you selected.
 
+= I have a hard-coded HTML field; how do I use that? =
+
+1. Click the “Add a custom field” button at the bottom of the Robly settings section
+1. In the “Custom Field Name” field, enter the `name` attribute of your custom field
+1. Choose the Robly field(s) for the custom field and save the contact form
+
 == Screenshots ==
 
 1. Settings screen
 2. Per-form settings
+3. Custom fields
 
 == Changelog ==
+
+= 1.2 =
+ * Add support for custom fields
 
 = 1.1.1 =
  * Fix some array bugs

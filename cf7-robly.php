@@ -3,7 +3,7 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API
- * Version: 1.1.1
+ * Version: 1.2
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
@@ -21,6 +21,7 @@ function cf7_robly_scripts() {
     wp_register_script( 'chosen', plugins_url( 'js/chosen.jquery.min.js', __FILE__ ), array( 'jquery' ) );
     wp_register_style( 'chosen', plugins_url( 'css/chosen.min.css', __FILE__ ) );
     wp_register_script( 'cf7-robly-backend', plugins_url( 'js/backend.min.js', __FILE__ ), array( 'jquery', 'chosen' ) );
+    wp_register_style( 'cf7-robly-backend', plugins_url( 'css/cf7-robly.min.css', __FILE__ ), array( 'chosen' ) );
 }
 
 /* add settings page */
@@ -196,9 +197,10 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     $post_id = $cf7->id();
     $settings = cf7_robly_get_form_settings( $post_id );
 
-    wp_enqueue_script( 'cf7-robly-backend' );
     wp_enqueue_script( 'chosen' );
     wp_enqueue_style( 'chosen' );
+    wp_enqueue_script( 'cf7-robly-backend' );
+    wp_enqueue_style( 'cf7-robly-backend' );
 
     // get all Robly sublists
     $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
@@ -220,7 +222,21 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
 
     // get all WPCF7 fields
     $wpcf7_shortcodes = WPCF7_ShortcodeManager::get_instance();
-    $form_fields = $wpcf7_shortcodes->get_scanned_tags();
+    $field_types_to_ignore = array( 'recaptcha', 'clear', 'submit' );
+    $form_fields = array();
+    foreach ( $wpcf7_shortcodes->get_scanned_tags() as $this_field ) {
+        if ( ! in_array( $this_field['type'], $field_types_to_ignore ) ) {
+            $form_fields[] = $this_field['name'];
+        }
+    }
+
+    // get saved fields and combine with WPCF7
+    $saved_fields = $settings['fields'];
+    if ( $saved_fields ) {
+        $all_fields = array_merge( $form_fields, array_keys( $saved_fields ) );
+    } else {
+        $all_fields = $form_fields;
+    }
 
     // start setting up Robly settings fields
     $fields = array(
@@ -251,35 +267,48 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     );
 
     // add all CF7 fields to Robly settings fields
-    $field_types_to_ignore = array( 'recaptcha', 'clear', 'submit' );
-    foreach ( $form_fields as $this_field ) {
-        if ( ! in_array( $this_field['type'], $field_types_to_ignore ) ) {
-            $fields_options = NULL;
-            foreach ( $robly_fields as $id => $label ) {
-                $fields_options .= '<option value="' . $id . '"';
-                if ( $settings['fields'] && $settings['fields'][$this_field['name']] ) {
-                    $fields_options .= in_array( $id, $settings['fields'][$this_field['name']] ) ? ' selected="selected"' : '';
-                }
-                $fields_options .= '>' . $label . '</option>';
+    foreach ( $all_fields as $this_field ) {
+        $fields_options = NULL;
+        foreach ( $robly_fields as $id => $label ) {
+            $fields_options .= '<option value="' . $id . '"';
+            if ( $settings['fields'] && $settings['fields'][$this_field] ) {
+                $fields_options .= in_array( $id, $settings['fields'][$this_field] ) ? ' selected="selected"' : '';
             }
-
-            $fields[$this_field['name']] = array(
-                'label'     => '<code>' . esc_html( $this_field['name'] ) . '</code> Field',
-                'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
-                'field'     => sprintf(
-                    '<label>
-                        <select name="cf7-robly[fields][%1$s][]" multiple %3$s>
-                            %2$s
-                        </select>
-                    </label>
-                    <p class="desc">Add contents of the <code>%1$s</code> field to these Robly field(s)</p>',
-                    $this_field['name'],
-                    $fields_options,
-                    $settings['ignore-form'] ? 'disabled' : ''
-                )
-            );
+            $fields_options .= '>' . $label . '</option>';
         }
+
+        $fields[$this_field] = array(
+            'label'     => '<code>' . esc_html( $this_field ) . '</code> Field',
+            'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
+            'field'     => sprintf(
+                '<label>
+                    <select name="cf7-robly[fields][%1$s][]" multiple %3$s>
+                        %2$s
+                    </select>
+                </label>
+                <p class="desc">Add contents of the <code>%1$s</code> field to these Robly field(s)</p>',
+                $this_field,
+                $fields_options,
+                $settings['ignore-form'] ? 'disabled' : ''
+            )
+        );
     }
+
+    // add a hidden row to use for cloning
+    $fields['custom-field-template'] = array(
+        'label'     => '<input type="text" placeholder="Custom Field Name" name="custom-field-name" /> Field',
+        'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
+        'field'     => sprintf(
+            '<label>
+                <select name="cf7-robly[fields][%1$s][]" multiple>
+                    %2$s
+                </select>
+            </label>
+            <p class="desc">Add contents of the <code><span class="name">%1$s</span></code> field to these Robly field(s)</p>',
+            'custom-field-template-name',
+            str_replace( 'selected="selected"', '', $fields_options )
+        )
+    );
 
     $rows = array();
 
@@ -297,10 +326,13 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
         );
 
     printf(
-        '<table class="form-table cf7-robly-table">
-            %s
-        </table>',
-        implode( '', $rows )
+        '<p class="cf7-robly-message"></p>
+        <table class="form-table cf7-robly-table">
+            %1$s
+        </table>
+        <p><button class="cf7-robly-add-custom-field button-secondary" %2$s>Add a custom field</button></p>',
+        implode( '', $rows ),
+        $settings['ignore-form'] ? 'disabled' : ''
     );
 
 }
