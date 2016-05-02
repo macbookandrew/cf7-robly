@@ -297,7 +297,8 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
         );
 
     printf(
-        '<table class="form-table cf7-robly-table">
+        '<p class="cf7-robly-message"></p>
+        <table class="form-table cf7-robly-table">
             %s
         </table>',
         implode( '', $rows )
@@ -488,7 +489,6 @@ function submit_to_robly( $form ) {
     }
 }
 
-#TODO: add JS to detect when form content changes and add message to Robly tab requiring to save field first
 #TODO: add support for custom fields (custom HTML fields)
 #TODO: fix blank select fields if form hasn’t yet been saved
 #TODO: make Chosen fields disabled as well
