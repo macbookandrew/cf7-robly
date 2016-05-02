@@ -3,9 +3,9 @@
         // disable all dropdowns if ignored
         $('input#ignore-form').on('change',function(){
             if ($(this).attr('checked')) {
-                $('select[name*="cf7-robly"]').attr('disabled', true);
+                $('select[name*="cf7-robly"]').attr('disabled', true).trigger('chosen:updated');
             } else {
-                $('select[name*="cf7-robly"]').attr('disabled', false);
+                $('select[name*="cf7-robly"]').attr('disabled', false).trigger('chosen:updated');
             }
         });
 

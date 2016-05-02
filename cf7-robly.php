@@ -490,4 +490,3 @@ function submit_to_robly( $form ) {
 }
 
 #TODO: add support for custom fields (custom HTML fields)
-#TODO: make Chosen fields disabled as well
