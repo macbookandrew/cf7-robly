@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
- * Description: Adds Contact Form 7 submissions to Robly using their API
+ * Description: Adds Contact Form 7 submissions to Robly using their API.
  * Version: 1.2
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
@@ -92,8 +92,8 @@ function cf7_robly_api_key_render() {
     <?php
     // cache lists and fields if valid keys
     if ( $options['cf7_robly_api_id'] && $options['cf7_robly_api_key'] ) {
-        cache_robly_lists( $options['cf7_robly_api_id'], $options['cf7_robly_api_key'] );
-        cache_robly_fields( $options['cf7_robly_api_id'], $options['cf7_robly_api_key'] );
+        cf7_robly_cache_robly_lists();
+        cf7_robly_cache_robly_fields();
     }
 }
 
@@ -132,7 +132,11 @@ function cf7_robly_options_page() { ?>
 }
 
 // cache Robly lists
-function cache_robly_lists( $robly_API_id = NULL, $robly_API_key = NULL ) {
+function cf7_robly_cache_robly_lists() {
+    $options = get_option( 'cf7_robly_settings' );
+    $robly_API_id = $options['cf7_robly_api_id'];
+    $robly_API_key = $options['cf7_robly_api_key'];
+
     if ( $robly_API_id && $robly_API_key ) {
         // get all sublists from API
         $sublists_ch = curl_init();
@@ -156,7 +160,11 @@ function cache_robly_lists( $robly_API_id = NULL, $robly_API_key = NULL ) {
 }
 
 // cache Robly fields
-function cache_robly_fields( $robly_API_id = NULL, $robly_API_key = NULL ) {
+function cf7_robly_cache_robly_fields() {
+    $options = get_option( 'cf7_robly_settings' );
+    $robly_API_id = $options['cf7_robly_api_id'];
+    $robly_API_key = $options['cf7_robly_api_key'];
+
     if ( $robly_API_id && $robly_API_key ) {
         // get all fields from API
         $fields_ch = curl_init();
@@ -207,6 +215,15 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     $all_submissions = $settings['all-submissions'];
     $sublists_options = NULL;
 
+    // cache sublists if needed
+    if ( ! $robly_sublists ) {
+        cf7_robly_cache_robly_lists();
+        $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
+        if ( ! $robly_sublists ) {
+            echo '<h2>Please <a href="' . get_admin_url() . '/options-general.php?page=contact-form-7-robly">save your API credentials</a> first.</h2>';
+        }
+    }
+
     // generate list of sublist options
     foreach ( $robly_sublists as $id => $list ) {
         $sublists_options .= '<option value="' . $id . '"';
@@ -219,6 +236,12 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     // get all Robly fields
     $robly_fields = maybe_unserialize( get_option( 'robly_fields' ) );
     $fields_options = NULL;
+
+    // cache fields if needed
+    if ( ! $robly_fields ) {
+        cf7_robly_cache_robly_fields();
+        $robly_fields = maybe_unserialize( get_option( 'robly_fields' ) );
+    }
 
     // get all WPCF7 fields
     $wpcf7_shortcodes = WPCF7_ShortcodeManager::get_instance();
