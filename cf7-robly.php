@@ -452,7 +452,11 @@ function submit_to_robly( $form ) {
 
     // get Robly lists
     $hidden_fields_sublists = explode( ',', esc_attr( $posted_data['robly-lists'] ) );
-    $cf7_form_settings_sublists = $settings['all-submissions'];
+    if ( $settings['all-submissions'] ) {
+        $cf7_form_settings_sublists = $settings['all-submissions'];
+    } else {
+        $cf7_form_settings_sublists = array();
+    }
     $robly_sublists = array_unique( array_merge( $hidden_fields_sublists, $cf7_form_settings_sublists ) );
 
     // get array keys for form data
