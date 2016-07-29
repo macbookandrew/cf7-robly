@@ -3,8 +3,8 @@
 **Donate link:** https://cash.me/$AndrewRMinionDesign  
 **Tags:** contact form 7, contact form, cf7, form, forms, submission, submissions, robly, email, automation, customer, marketing  
 **Requires at least:** 4.3  
-**Tested up to:** 4.5.1  
-**Stable tag:** 1.2.3  
+**Tested up to:** 4.6  
+**Stable tag:** 1.2.4  
 **License:** GPLv2 or later  
 **License URI:** http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -61,6 +61,9 @@ API stands for “Application Programming Interface,” which basically means co
 
 
 ## Changelog ##
+
+### 1.2.4 ###
+ * Fix a bunch of PHP undefined index issues for new installations
 
 ### 1.2.3 ###
  * Fix issue preventing form submission if no sublists are set for that form

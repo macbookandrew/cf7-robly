@@ -3,7 +3,7 @@
  * Plugin Name: Contact Form 7 to Robly
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API.
- * Version: 1.2.3
+ * Version: 1.2.4
  * Author: AndrewRMinion Design
  * Author URI: https://andrewrminion.com
  * License: GPL2
@@ -205,6 +205,11 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     $post_id = $cf7->id();
     $settings = cf7_robly_get_form_settings( $post_id );
 
+    // prevent undefined index issues
+    $all_submissions = isset( $settings['all-submissions'] ) ? $settings['all-submissions'] : NULL;
+    $saved_fields = isset( $settings['fields'] ) ? $settings['fields'] : NULL;
+    $ignore_form = isset( $settings['ignore-form'] ) ? $settings['ignore-form'] : NULL;
+
     wp_enqueue_script( 'chosen' );
     wp_enqueue_style( 'chosen' );
     wp_enqueue_script( 'cf7-robly-backend' );
@@ -212,7 +217,6 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
 
     // get all Robly sublists
     $robly_sublists = maybe_unserialize( get_option( 'robly_sublists' ) );
-    $all_submissions = $settings['all-submissions'];
     $sublists_options = NULL;
 
     // cache sublists if needed
@@ -228,7 +232,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     foreach ( $robly_sublists as $id => $list ) {
         $sublists_options .= '<option value="' . $id . '"';
         if ( $all_submissions ) {
-            $sublists_options .= in_array( $id, $settings['all-submissions'] ) ? ' selected="selected"' : '';
+            $sublists_options .= in_array( $id, $all_submissions ) ? ' selected="selected"' : '';
         }
         $sublists_options .= '>' . $list . '</option>';
     }
@@ -254,7 +258,6 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     }
 
     // get saved fields and combine with WPCF7
-    $saved_fields = $settings['fields'];
     if ( $saved_fields ) {
         $all_fields = array_merge( $form_fields, array_keys( $saved_fields ) );
     } else {
@@ -269,7 +272,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
             'field'     => sprintf(
                 '<input id="ignore-form" name="cf7-robly[ignore-form]" value="1" %s type="checkbox" />
                 <p class="desc"><label for="ignore-form">%s</ignore></p>',
-                checked( $settings[ 'ignore-form' ], true, false ),
+                checked( $ignore_form, true, false ),
                 'Don&rsquo;t send anything from this form to Robly'
             ),
         ),
@@ -283,7 +286,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
                     </select>
                 </label>
                 <p class="desc">%2$s</p>',
-                $settings['ignore-form'] ? 'disabled' : '',
+                $ignore_form ? 'disabled' : '',
                 'Add all submissions to these lists'
             ),
         ),
@@ -294,7 +297,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
         $fields_options = NULL;
         foreach ( $robly_fields as $id => $label ) {
             $fields_options .= '<option value="' . $id . '"';
-            if ( $settings['fields'] && $settings['fields'][$this_field] ) {
+            if ( isset( $settings['fields'] ) && isset( $settings['fields'][$this_field] ) ) {
                 $fields_options .= in_array( $id, $settings['fields'][$this_field] ) ? ' selected="selected"' : '';
             }
             $fields_options .= '>' . $label . '</option>';
@@ -312,7 +315,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
                 <p class="desc">Add contents of the <code>%1$s</code> field to these Robly field(s)</p>',
                 $this_field,
                 $fields_options,
-                $settings['ignore-form'] ? 'disabled' : ''
+                $ignore_form ? 'disabled' : ''
             )
         );
     }
@@ -355,7 +358,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
         </table>
         <p><button class="cf7-robly-add-custom-field button-secondary" %2$s>Add a custom field</button></p>',
         implode( '', $rows ),
-        $settings['ignore-form'] ? 'disabled' : ''
+        $ignore_form ? 'disabled' : ''
     );
 
 }
@@ -437,7 +440,7 @@ function submit_to_robly( $form ) {
     $API_credentials = '?api_id=' . $robly_API_id . '&api_key=' . $robly_API_key;
 
     // set notification email address
-    if ( $options['alternate_email'] ) {
+    if ( isset( $options['alternate_email'] ) ) {
         $notification_email = $options['alternate_email'];
     } else {
         $notification_email = get_option( 'admin_email' );
@@ -451,7 +454,11 @@ function submit_to_robly( $form ) {
     $settings = cf7_robly_get_form_settings( $posted_data['_wpcf7'], NULL, true );
 
     // get Robly lists
-    $hidden_fields_sublists = explode( ',', esc_attr( $posted_data['robly-lists'] ) );
+    if ( isset( $posted_data['robly-lists'] ) ) {
+        $hidden_fields_sublists = explode( ',', esc_attr( $posted_data['robly-lists'] ) );
+    } else {
+        $hidden_fields_sublists = array();
+    }
     if ( $settings['all-submissions'] ) {
         $cf7_form_settings_sublists = $settings['all-submissions'];
     } else {
@@ -471,7 +478,7 @@ function submit_to_robly( $form ) {
     }
 
     // check for email address
-    if ( ! $settings['ignore-form'] && isset( $field_matches['email'] ) && $posted_data[$email_field] != NULL && $posted_data[$email_field] != '' ) {
+    if ( ( ! isset( $settings['ignore-form'] ) || $settings['ignore-form'] == 'false' ) && isset( $field_matches['email'] ) && $posted_data[$email_field] != NULL && $posted_data[$email_field] != '' ) {
         // search Robly for customer by email
         $ch = curl_init();
         curl_setopt( $ch, CURLOPT_URL, $API_base . 'contacts/search' . $API_credentials . '&email=' . $posted_data[$email_field] );
