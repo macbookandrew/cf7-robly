@@ -62,6 +62,9 @@ API stands for “Application Programming Interface,” which basically means co
 
 ## Changelog ##
 
+### 1.2.4 ###
+ * Fix a bunch of PHP undefined index issues for new installations
+
 ### 1.2.3 ###
  * Fix issue preventing form submission if no sublists are set for that form
 
