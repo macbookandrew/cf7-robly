@@ -22,6 +22,11 @@ This plugin requires an active Robly account as well as Contact Form 7. You’ll
 1. Activate the plugin through the Plugins menu in WordPress.
 1. Go to Settings > CF7 to Robly in WordPress, enter your Robly API ID and key, and save the settings.
 1. On each of your Contact Form 7 forms, go to the “Robly Settings” tab and specify the list(s) you would like to add submissions to, as well as specifying the form fields and Robly data fields. Save the contact form.
+1. If you need advanced list handling (adding contacts to specific lists based on which checkboxes are active, etc.):
+	1. Add a hidden field named `robly_lists`: `[hidden robly-lists]`
+	1. Get the ID numbers of the appropriate lists from Robly: go to <a href="https://app.robly.com/email/lists/summary" target="_blank">lists summary</a> and click on a list. The URL will have a `value` paramater with the ID field you need (example: https://app.robly.com/email/contacts?lookup_type=sub_list&value=<strong>11111</strong>)
+	1. Use Javascript on the frontend to watch for changes and dynamically set the `robly_lists` field value to a comma-separated list of the Robly list IDs
+	1. For an example, look in the plugin folder at <a href="https://github.com/macbookandrew/cf7-robly/blob/master/js/advanced-checkboxes.js">js/advanced-checkboxes.js</a>
 
 == Frequently asked questions ==
 
