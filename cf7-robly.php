@@ -271,7 +271,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
             'docs_url'  => 'http://code.andrewrminion.com/contact-form-7-to-robly/',
             'field'     => sprintf(
                 '<input id="ignore-form" name="cf7-robly[ignore-form]" value="1" %s type="checkbox" />
-                <p class="desc"><label for="ignore-form">%s</ignore></p>',
+                <p class="desc"><label for="ignore-form">%s</label></p>',
                 checked( $ignore_form, true, false ),
                 'Don&rsquo;t send anything from this form to Robly'
             ),
