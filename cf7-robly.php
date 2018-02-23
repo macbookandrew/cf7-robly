@@ -15,8 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-include_once(plugin_dir_path(__FILE__) . 'form-tag.php');
-
 /* register scripts */
 add_action( 'admin_enqueue_scripts', 'cf7_robly_scripts' );
 function cf7_robly_scripts() {
@@ -250,7 +248,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     }
 
     // get all WPCF7 fields
-    $wpcf7_shortcodes = WPCF7_FormTagsManager::get_instance();
+    $wpcf7_shortcodes = WPCF7_ShortcodeManager::get_instance();
     $field_types_to_ignore = array( 'recaptcha', 'clear', 'submit' );
     $form_fields = array();
     foreach ( $wpcf7_shortcodes->get_scanned_tags() as $this_field ) {
@@ -265,6 +263,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     } else {
         $all_fields = $form_fields;
     }
+
     // start setting up Robly settings fields
     $fields = array(
         'ignore-field' => array(
@@ -466,6 +465,7 @@ function submit_to_robly( $form ) {
         $cf7_form_settings_sublists = array();
     }
     $robly_sublists = array_unique( array_merge( $hidden_fields_sublists, $cf7_form_settings_sublists ) );
+
     // get array keys for form data
     if ( $settings['fields'] ) {
         $field_matches = array();
