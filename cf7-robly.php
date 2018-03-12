@@ -81,6 +81,7 @@ function cf7_robly_settings_init() {
 }
 
 // print API ID field
+
 function cf7_robly_api_id_render() {
     $options = get_option( 'cf7_robly_settings' ); ?>
     <input type="text" name="cf7_robly_settings[cf7_robly_api_id]" placeholder="8c5cc6b52e139888c3a3eb2cc7dacd9b" size="40" value="<?php echo $options['cf7_robly_api_id']; ?>">
@@ -206,7 +207,7 @@ function cf7_robly_wpcf7_add_meta_boxes() {
 function cf7_robly_wpcf7_metabox( $cf7 ) {
     $post_id = $cf7->id();
     $settings = cf7_robly_get_form_settings( $post_id );
-
+    
     // prevent undefined index issues
     $all_submissions = isset( $settings['all-submissions'] ) ? $settings['all-submissions'] : NULL;
     $saved_fields = isset( $settings['fields'] ) ? $settings['fields'] : NULL;
@@ -274,7 +275,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
                 '<input id="ignore-form" name="cf7-robly[ignore-form]" value="1" %s type="checkbox" />
                 <p class="desc"><label for="ignore-form">%s</label></p>',
                 checked( $ignore_form, true, false ),
-                'Don&rsquo;t send anything from this form to Robly'
+                'Don&rsquo;t send anything from this form to Robly - IF you are using the [robly] code on the form - you SHOULD check this box.'
             ),
         ),
         'all-submissions' => array(
@@ -430,6 +431,7 @@ function cf7_robly_get_form_settings( $form_id, $field = null, $fresh = false ) 
 
 /* hook into WPCF7 submission */
 add_action( 'wpcf7_before_send_mail', 'submit_to_robly', 10, 1 );
+
 function submit_to_robly( $form ) {
     global $wpdb;
 
@@ -445,17 +447,17 @@ function submit_to_robly( $form ) {
         $notification_email = $options['alternate_email'];
     } else {
         $notification_email = get_option( 'admin_email' );
-    }
-
+    }   
     // get posted data
     $submission = WPCF7_Submission::get_instance();
     if ( $submission ) {
-        $posted_data = $submission->get_posted_data();
+        $posted_data = $submission->get_posted_data();    
+        $roblyField = (isset($posted_data['robly'])) ? $posted_data['robly'] : '0';
     }
     $settings = cf7_robly_get_form_settings( $posted_data['_wpcf7'], NULL, true );
-
-    // get Robly lists
-    if ( isset( $posted_data['robly-lists'] ) ) {
+    
+// get Robly lists
+if ( isset( $posted_data['robly-lists'] ) ) {
         $hidden_fields_sublists = explode( ',', esc_attr( $posted_data['robly-lists'] ) );
     } else {
         $hidden_fields_sublists = array();
@@ -477,7 +479,9 @@ function submit_to_robly( $form ) {
         $email_field = $field_matches['email'];
     }
 
-    // check for email address
+if ($roblyField == '1') {$settings['ignore-form'] = null;}    
+
+// check for email address
     if ( ( ! isset( $settings['ignore-form'] ) || $settings['ignore-form'] == 'false' ) && isset( $field_matches['email'] ) && $posted_data[$email_field] != NULL && $posted_data[$email_field] != '' ) {
         // search Robly for customer by email
         $ch = curl_init();
@@ -485,7 +489,6 @@ function submit_to_robly( $form ) {
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
         $curl_search = curl_exec( $ch );
         $curl_search_response = json_decode( $curl_search );
-
         // set API method for subsequent call
         if ( isset( $curl_search_response->member ) ) {
             // handle deleted/unsubscribed members
@@ -493,7 +496,6 @@ function submit_to_robly( $form ) {
                 curl_setopt( $ch, CURLOPT_URL, $API_base . 'contacts/resubscribe' . $API_credentials . '&email=' . $email );
                 curl_setopt( $ch, CURLOPT_POST, 1 );
                 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-
                 // run the request and check to see if manual email is needed
                 $resubscribe_curl_response = curl_exec( $ch );
                 $json_response = json_decode( $resubscribe_curl_response );
@@ -511,14 +513,12 @@ function submit_to_robly( $form ) {
             $API_method = 'sign_up/generate';
         }
         $post_url = $API_method . $API_credentials;
-
         // set up user data for the request
         $user_parameters = array();
         foreach( $field_matches as $key => $label ) {
             $user_parameters[$key] = $posted_data[$label];
         }
         $user_parameters = http_build_query( $user_parameters );
-
         // add sublist IDs
         $post_data = NULL;
         if ( $robly_sublists ) {
@@ -527,13 +527,11 @@ function submit_to_robly( $form ) {
             }
         }
         $post_data = rtrim( $post_data, '&' );
-
         // set up the rest of the request
         curl_setopt( $ch, CURLOPT_URL, $API_base . $API_method . $API_credentials . '&' . $user_parameters );
         curl_setopt( $ch, CURLOPT_POST, 1 );
         curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_data );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-
         // run the request and check to see if manual email is needed
         $user_curl_response = curl_exec( $ch );
         $json_response = json_decode( $user_curl_response );
@@ -543,10 +541,8 @@ function submit_to_robly( $form ) {
         } else {
             $send_email = false;
         }
-
         // close cUrl connection
         curl_close( $ch );
-
         // send notification email if necessary
         if ( $send_email ) {
             $email_sent = mail( $notification_email, 'Contact to manually add to Robly', "API failure\n\nAPI call:\n" . $API_base . $API_method . '?api_id=XXX&api_key=XXX&' . $user_parameters . "\nLists: " . $post_data . "\n\nDetails:\n" . $error_message . "\n\nSent by the Contact Form 7 to Robly plugin on " . home_url() );

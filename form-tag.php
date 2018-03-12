@@ -1,5 +1,6 @@
 <?php // Robly Form Tag Add On
 
+
 // Add Robly Opt In Tag 
 
 add_action( 'wpcf7_init', 'custom_add_form_tag_robly' );
@@ -14,20 +15,20 @@ function custom_robly_form_tag_handler( $tag ) {
     if ( empty( $tag->name ) )
 		return '';
 
-	$unique_id = uniqid('robly');
 	$atts = array();
-	$atts['class'] = $tag->get_class_option( 'class' );
+	$atts['class'] = $tag->get_option( 'class' )['0'];
 	$atts['id'] = $tag->get_option( 'id', 'id', true );
-	$atts['name'] = $tag->name;
 	$atts['type'] = $tag->type;
     $atts['message'] = ( empty ($tag->values[0] ) ) ? 'Sign me up for your mailing list' : $tag->values[0] ;
     $atts['checked'] = $tag->get_option('checked')['0'];
 	$inputid = (!empty($atts['id'])) ? 'id="'.$atts['id'].'" ' : '';
 	$inputid_for = ($inputid) ? 'for="'.$atts['id'].'" ' : '';
-        $html = '<span id="'.$unique_id.'" class="wpcf7-form-control-wrap ' . $atts['name'] . '-wrap">';
+
+        $html = '<span id="Robly-form" class="wpcf7-form-control-wrap ' . $atts['type'] . '-wrap">';
         $html .= '<span class="wpcf7-form-control wpcf7-checkbox"><span class="wpcf7-list-item first last">';
         $html .= '<label ' . $inputid_for . ' class="robly-optin-label">';
-        $html .= '<input ' . $inputid . 'class="' . $atts['class'] . '"  type="checkbox" name="' . $atts['name'] . '"';
+        $html .= '<input type="hidden" name="'.$atts['type'].'" value="0" />';
+        $html .= '<input ' . $inputid . 'class="' . $atts['class'] . '"  type="checkbox" value="1" name="' . $atts['type'] . '"';
         $html .= ($atts['checked'] === 'true') ? 'checked' : '';
         $html .= '/><span class="wpcf7-list-item-label">' .$atts['message'] . '</label>';
         $html .= '</label></span></span></span>';
@@ -127,22 +128,6 @@ function wpcf7_tg_pane_robly($contact_form, $args=''){
 							<em><?php echo __('If checked, This will make the opt-in pre-checked','cf7_robly'); ?></em>
 						</td>
 					</tr>
-                   <?php /* ?> <tr>
-                        <th scope="row">
-                            <label for="<?php echo esc_attr($args['content'].'-lists'); ?>"><?php echo esc_html(__('Select the Robly List', 'cf7_robly'));?></label>
-                        </th>
-                        <td>
-                        <?php echo '<select name="'. esc_attr($args['content']).'-lists" id="'. esc_attr($args['content']) .'-lists"><option value="" selected>< -- Please Choose -- ></option>';
-                                  
-                                      // generate list of sublist options
-                                    foreach ( $robly_sublists as $id => $list ) {
-                                        echo '<option value="' . $id . '"';
-                                        echo '>' . $list . '</option>';
-                                    }
-    
-                              echo '</select>';?>
-                        </td>
-                    </tr><?php */ ?>
 				</tbody></table>
 			</fieldset>
 		</div>
