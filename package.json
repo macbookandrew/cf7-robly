@@ -1,14 +1,14 @@
 {
   "name": "cf7-robly",
-  "version": "1.0",
+  "version": "1.2.5",
   "main": "cf7-robly.php",
   "author": "AndrewRMinion Design",
   "repository": "https://github.com/macbookandrew/cf7-robly",
   "license": "GPLv2",
   "devDependencies": {
-    "grunt": "^1.0.1",
-    "grunt-contrib-uglify": "^3.1.0",
-    "grunt-wp-i18n": "^1.0.0",
+    "grunt": "^1.0.3",
+    "grunt-contrib-uglify": "^4.0.0",
+    "grunt-wp-i18n": "^1.0.3",
     "grunt-wp-readme-to-markdown": "^2.0.1"
   }
 }
