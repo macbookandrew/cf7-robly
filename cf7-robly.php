@@ -4,7 +4,7 @@
  * Plugin URI: http://code.andrewrminion.com/contact-form-7-to-robly
  * Description: Adds Contact Form 7 submissions to Robly using their API.
  * Version: 1.2.5
- * Author: AndrewRMinion Design
+ * Author: Andrew Minion
  * Author URI: https://andrewrminion.com
  * License: GPL2
  * GitHub Plugin URI: https://github.com/macbookandrew/cf7-robly
@@ -248,7 +248,7 @@ function cf7_robly_wpcf7_metabox( $cf7 ) {
     }
 
     // get all WPCF7 fields
-    $wpcf7_shortcodes = WPCF7_ShortcodeManager::get_instance();
+    $wpcf7_shortcodes = WPCF7_FormTagsManager::get_instance();
     $field_types_to_ignore = array( 'recaptcha', 'clear', 'submit' );
     $form_fields = array();
     foreach ( $wpcf7_shortcodes->get_scanned_tags() as $this_field ) {
